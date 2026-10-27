@@ -1,11 +1,11 @@
 from collections import Counter
 from datetime import date
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Query
 from sqlalchemy import extract, select
 
-from app.deps import DB, CurrentUser, Teacher
-from app.models import Attendance, AttendanceStatus, Role, User
+from app.deps import DB, CurrentUser, Teacher, ensure_self_or_teacher
+from app.models import Attendance, AttendanceStatus, User
 from app.schemas.attendance import AttendanceIn, AttendanceOut, MonthlyAttendance
 
 router = APIRouter(prefix="/attendance", tags=["attendance"])
@@ -47,8 +47,7 @@ def monthly_attendance(
     student_id: int, db: DB, user: CurrentUser, month: str = Query(pattern=r"^\d{4}-\d{2}$")
 ) -> MonthlyAttendance:
     """월별 출결 (캘린더 + 요약 카드 4종용). month 형식: 2026-10"""
-    if user.role != Role.teacher and user.id != student_id:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "볼 수 없는 학생입니다")
+    ensure_self_or_teacher(user, student_id)
     year, mon = map(int, month.split("-"))
     records = list(
         db.scalars(
