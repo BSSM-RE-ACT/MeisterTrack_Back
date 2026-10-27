@@ -1,0 +1,7 @@
+__pycache__/
+*.py[oc]
+.venv/
+.env
+*.db
+.pytest_cache/
+.ruff_cache/
