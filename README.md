@@ -49,6 +49,7 @@ uv run ruff check . && uv run ruff format --check .
 | 인증 | POST | `/auth/google` | 누구나 (학교 도메인 + 등록된 사용자) |
 | | GET | `/auth/me` | 로그인 |
 | 사용자 | GET | `/users/students?grade&class_no` | 교사 |
+| 사용자 | GET | `/users/teachers` | 교사 |
 | | PATCH | `/users/me` (연락처 수정) | 로그인 |
 | | GET | `/users/import/template` (엑셀 양식) | 교사 |
 | | POST | `/users/import` (엑셀 일괄 등록) | 교사 |
