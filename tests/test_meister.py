@@ -70,3 +70,9 @@ def test_score_list(client, student, teacher):
     assert rows[0]["scores"]["외국어능력"] == 0
     assert rows[0]["pending"] == 1
     assert client.get("/meister/scores", headers=auth(student)).status_code == 403
+
+
+def test_submission_requires_title_and_item(client, student):
+    for blank in ({"title": "  "}, {"item": ""}):
+        body = {**SUBMISSION, **blank}
+        assert client.post("/meister/submissions", json=body, headers=auth(student)).status_code == 422

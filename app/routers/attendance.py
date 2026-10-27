@@ -1,11 +1,11 @@
 from collections import Counter
 from datetime import date
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import extract, select
 
 from app.deps import DB, CurrentUser, Teacher, ensure_self_or_teacher
-from app.models import Attendance, AttendanceStatus, User
+from app.models import Attendance, AttendanceStatus, Role, User
 from app.schemas.attendance import AttendanceIn, AttendanceOut, MonthlyAttendance
 
 router = APIRouter(prefix="/attendance", tags=["attendance"])
@@ -14,6 +14,10 @@ router = APIRouter(prefix="/attendance", tags=["attendance"])
 @router.put("", response_model=list[AttendanceOut])
 def upsert_attendance(body: list[AttendanceIn], db: DB, teacher: Teacher) -> list[Attendance]:
     """같은 학생·날짜 기록이 있으면 덮어쓴다."""
+    ids = {entry.student_id for entry in body}
+    found = set(db.scalars(select(User.id).where(User.id.in_(ids), User.role == Role.student)))
+    if missing := ids - found:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"학생을 찾을 수 없습니다: {sorted(missing)}")
     saved = []
     for entry in body:
         record = db.scalar(
