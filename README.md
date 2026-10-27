@@ -20,6 +20,14 @@ API 문서: http://localhost:8000/docs
 
 `DEBUG=true`이면 `POST /auth/dev-login {"email": "teacher@bssm.hs.kr"}`로 Google 없이 로그인할 수 있습니다.
 
+## 계정 일괄 등록
+
+`/users/import/template`로 받은 양식에 채워서 `/users/import`에 올립니다.
+
+- 열: 이메일, 이름, 구분(학생/교사), 학년, 반, 번호, 직위, 연락처
+- 학생은 학년·반·번호 필수. 이메일이 이미 있으면 정보를 덮어씁니다.
+- 한 행이라도 오류가 있으면 아무것도 저장하지 않고 행별 오류를 돌려줍니다.
+
 ## 테스트
 
 ```bash
@@ -34,6 +42,8 @@ uv run ruff check . && uv run ruff format --check .
 | 인증 | POST | `/auth/google` | 누구나 (학교 도메인 + 등록된 사용자) |
 | | GET | `/auth/me` | 로그인 |
 | 사용자 | GET | `/users/students?grade&class_no` | 교사 |
+| | GET | `/users/import/template` (엑셀 양식) | 교사 |
+| | POST | `/users/import` (엑셀 일괄 등록) | 교사 |
 | 마이스터역량 | POST | `/meister/submissions` | 학생 |
 | | GET | `/meister/submissions/me` | 학생 |
 | | GET | `/meister/submissions?status&category&grade&student_id&page&size` | 교사 |

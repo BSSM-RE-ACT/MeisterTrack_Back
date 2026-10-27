@@ -1,0 +1,67 @@
+"""개발용 샘플 데이터. 실행: uv run python -m scripts.seed"""
+
+from datetime import date, timedelta
+
+from app.db import SessionLocal
+from app.models import (
+    Attendance,
+    AttendanceStatus,
+    MeisterCategory,
+    MeisterSubmission,
+    Role,
+    SubmissionStatus,
+    User,
+)
+
+
+def main() -> None:
+    with SessionLocal() as db:
+        if db.query(User).count():
+            print("이미 데이터가 있어 건너뜁니다")
+            return
+
+        teacher = User(email="teacher@bssm.hs.kr", name="이선생", role=Role.teacher, position="담임교사")
+        students = [
+            User(email=f"student{i}@bssm.hs.kr", name=name, role=Role.student, grade=2, class_no=1, number=i)
+            for i, name in enumerate(["김부마", "이소마", "박마고"], start=1)
+        ]
+        db.add_all([teacher, *students])
+        db.flush()
+
+        db.add_all(
+            [
+                MeisterSubmission(
+                    student_id=students[0].id,
+                    category=MeisterCategory.technical,
+                    item="전공관련 자격증",
+                    title="정보처리기능사",
+                ),
+                MeisterSubmission(
+                    student_id=students[1].id,
+                    category=MeisterCategory.language,
+                    item="공인어학성적",
+                    title="TOEIC 800",
+                    status=SubmissionStatus.approved,
+                    score=20,
+                    reviewer_id=teacher.id,
+                ),
+            ]
+        )
+
+        today = date.today()
+        # 대부분 출석, 가끔 지각·조퇴·결석
+        rare = [AttendanceStatus.late, AttendanceStatus.early_leave, AttendanceStatus.absent]
+        for offset in range(10):
+            day = today - timedelta(days=offset)
+            if day.weekday() >= 5:
+                continue
+            for i, student in enumerate(students):
+                status = rare[(offset + i) % 3] if (offset + i) % 4 == 0 else AttendanceStatus.present
+                db.add(Attendance(student_id=student.id, date=day, status=status, recorded_by=teacher.id))
+
+        db.commit()
+        print("샘플 데이터를 넣었습니다")
+
+
+if __name__ == "__main__":
+    main()
