@@ -20,6 +20,13 @@ API 문서: http://localhost:8000/docs
 
 `DEBUG=true`이면 `POST /auth/dev-login {"email": "teacher@bssm.hs.kr"}`로 Google 없이 로그인할 수 있습니다.
 
+## NEIS 연동
+
+급식·학사일정은 [NEIS 교육정보 개방 포털](https://open.neis.go.kr)에서 가져옵니다. 같은 요청은 1시간 캐시합니다.
+
+- `NEIS_API_KEY`: 없으면 호출당 5건으로 제한되니 운영에선 꼭 발급받아 넣기
+- `NEIS_OFFICE_CODE` (기본 C10 부산), `NEIS_SCHOOL_CODE` (기본 7150658)
+
 ## 계정 일괄 등록
 
 `/users/import/template`로 받은 양식에 채워서 `/users/import`에 올립니다.
@@ -55,6 +62,24 @@ uv run ruff check . && uv run ruff format --check .
 | 출결 | PUT | `/attendance` (여러 건 upsert) | 교사 |
 | | GET | `/attendance?date&grade&class_no` | 교사 |
 | | GET | `/attendance/students/{id}?month=2026-10` | 교사, 본인 |
+| 시간표 | GET | `/timetable/me` | 학생 |
+| | GET | `/timetable?grade&class_no` | 로그인 |
+| | PUT | `/timetable?grade&class_no` (반 전체 저장) | 교사 |
+| 급식 | GET | `/meals?start&end` (NEIS, 31일 이내) | 로그인 |
+| 학사일정 | GET | `/calendar?start&end` (NEIS + 학교 등록) | 로그인 |
+| | POST / PUT / DELETE | `/calendar`, `/calendar/{id}` | 교사 |
+| 상벌점 | POST | `/mileage` (여러 학생 한 번에) | 교사 |
+| | GET | `/mileage/students/{id}` | 교사, 본인 |
+| | GET | `/mileage/students?grade&class_no` (반별 합계) | 교사 |
+| | DELETE | `/mileage/{id}` | 교사 |
+| 동아리 | GET | `/clubs?type`, `/clubs/me`, `/clubs/{id}` | 로그인 |
+| | POST / PUT | `/clubs`, `/clubs/{id}` | 교사 |
+| | PUT | `/clubs/{id}/members` (명단 교체) | 교사 |
+| | GET / POST | `/clubs/{id}/activities` | 로그인 / 교사·부장 |
+| 방과후 | GET | `/after-school/courses?semester=2026-2`, `/after-school/me` | 로그인 |
+| | POST / PUT | `/after-school/courses`, `/after-school/courses/{id}` | 교사 |
+| | POST / DELETE | `/after-school/courses/{id}/enroll` | 학생 |
+| | GET | `/after-school/courses/{id}/students` | 교사 |
 
 ## 모델 변경 시
 

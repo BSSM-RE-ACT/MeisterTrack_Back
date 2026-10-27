@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import func, select
 
-from app.deps import DB, CurrentUser, Teacher
+from app.deps import DB, CurrentUser, Teacher, ensure_self_or_teacher
 from app.models import MeisterCategory, MeisterSubmission, Role, SubmissionStatus, User
 from app.schemas.meister import (
     ApproveIn,
@@ -130,8 +130,7 @@ def reject(submission_id: int, body: RejectIn, db: DB, teacher: Teacher) -> Meis
 
 @router.get("/scores/{student_id}", response_model=StudentScore)
 def student_score(student_id: int, db: DB, user: CurrentUser) -> StudentScore:
-    if user.role != Role.teacher and user.id != student_id:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "볼 수 없는 학생입니다")
+    ensure_self_or_teacher(user, student_id)
     student = db.get(User, student_id)
     if student is None or student.role != Role.student:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "학생을 찾을 수 없습니다")

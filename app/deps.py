@@ -28,3 +28,8 @@ def require_teacher(user: Annotated[User, Depends(get_current_user)]) -> User:
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
 Teacher = Annotated[User, Depends(require_teacher)]
+
+
+def ensure_self_or_teacher(user: User, student_id: int) -> None:
+    if user.role != Role.teacher and user.id != student_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "볼 수 없는 학생입니다")
