@@ -73,3 +73,12 @@ class StudentScore(BaseModel):
     student: UserOut
     total: float
     categories: list[CategoryScore]
+
+
+class StudentScoreRow(BaseModel):
+    """학생 점수 조회 목록 한 줄"""
+
+    student: UserOut
+    total: float
+    scores: dict[MeisterCategory, float]
+    pending: int

@@ -22,3 +22,9 @@ def test_dev_login(client, student, monkeypatch):
     assert res.status_code == 200
     assert res.json()["user"]["name"] == "김부마"
     assert client.post("/auth/dev-login", json={"email": "nobody@bssm.hs.kr"}).status_code == 403
+
+
+def test_update_me(client, student):
+    res = client.patch("/users/me", json={"phone": "010-1111-2222"}, headers=auth(student))
+    assert res.status_code == 200
+    assert res.json()["phone"] == "010-1111-2222"

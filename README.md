@@ -49,6 +49,7 @@ uv run ruff check . && uv run ruff format --check .
 | 인증 | POST | `/auth/google` | 누구나 (학교 도메인 + 등록된 사용자) |
 | | GET | `/auth/me` | 로그인 |
 | 사용자 | GET | `/users/students?grade&class_no` | 교사 |
+| | PATCH | `/users/me` (연락처 수정) | 로그인 |
 | | GET | `/users/import/template` (엑셀 양식) | 교사 |
 | | POST | `/users/import` (엑셀 일괄 등록) | 교사 |
 | 마이스터역량 | POST | `/meister/submissions` | 학생 |
@@ -56,8 +57,10 @@ uv run ruff check . && uv run ruff format --check .
 | | GET | `/meister/submissions?status&category&grade&student_id&page&size` | 교사 |
 | | GET | `/meister/submissions/summary` | 교사 |
 | | GET | `/meister/submissions/{id}` | 교사, 본인 |
+| | DELETE | `/meister/submissions/{id}` (대기 중인 본인 신청 취소) | 학생 |
 | | POST | `/meister/submissions/{id}/approve` `{score, memo}` | 교사 |
 | | POST | `/meister/submissions/{id}/reject` `{memo}` | 교사 |
+| | GET | `/meister/scores?grade&class_no` (학생별 점수 목록) | 교사 |
 | | GET | `/meister/scores/{student_id}` | 교사, 본인 |
 | 출결 | PUT | `/attendance` (여러 건 upsert) | 교사 |
 | | GET | `/attendance?date&grade&class_no` | 교사 |
