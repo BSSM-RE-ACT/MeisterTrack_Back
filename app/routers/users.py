@@ -40,6 +40,12 @@ def list_students(db: DB, _: Teacher, grade: int | None = None, class_no: int | 
     return list(db.scalars(query.order_by(User.grade, User.class_no, User.number)))
 
 
+@router.get("/teachers", response_model=list[UserOut])
+def list_teachers(db: DB, _: Teacher) -> list[User]:
+    """동아리 지도교사 지정 등에 쓰는 교사 목록"""
+    return list(db.scalars(select(User).where(User.role == Role.teacher).order_by(User.name)))
+
+
 @router.get("/import/template")
 def import_template(_: Teacher) -> Response:
     return Response(

@@ -31,10 +31,17 @@ def main() -> None:
             return
 
         teacher = User(email="teacher@bssm.hs.kr", name="이선생", role=Role.teacher, position="담임교사")
+        names = ["김부마", "이소마", "박마고", "최코딩", "정서버", "한앱개", "윤보안", "강임베"]
         students = [
             User(email=f"student{i}@bssm.hs.kr", name=name, role=Role.student, grade=2, class_no=1, number=i)
-            for i, name in enumerate(["김부마", "이소마", "박마고"], start=1)
+            for i, name in enumerate(names, start=1)
         ]
+        # 다른 반 학생 (반 선택 화면 확인용)
+        others = [
+            User(email=f"student2{i}@bssm.hs.kr", name=name, role=Role.student, grade=2, class_no=2, number=i)
+            for i, name in enumerate(["오웹프", "서데이"], start=1)
+        ]
+        db.add_all(others)
         db.add_all([teacher, *students])
         db.flush()
 
@@ -45,6 +52,19 @@ def main() -> None:
                     category=MeisterCategory.technical,
                     item="전공관련 자격증",
                     title="정보처리기능사",
+                ),
+                MeisterSubmission(
+                    student_id=students[2].id,
+                    category=MeisterCategory.basic,
+                    item="직업기초능력평가",
+                    title="직업기초능력평가 3수준",
+                ),
+                MeisterSubmission(
+                    student_id=students[3].id,
+                    category=MeisterCategory.character,
+                    item="봉사활동",
+                    title="지역아동센터 코딩 교육 봉사 20시간",
+                    content="토요일마다 초등학생 대상 스크래치 수업",
                 ),
                 MeisterSubmission(
                     student_id=students[1].id,

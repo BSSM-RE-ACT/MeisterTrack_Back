@@ -34,3 +34,10 @@ def test_members_validation(client, student, teacher):
     assert client.put(f"/clubs/{club_id}/members", json=dup, headers=auth(teacher)).status_code == 400
     bad = [{"student_id": teacher.id}]
     assert client.put(f"/clubs/{club_id}/members", json=bad, headers=auth(teacher)).status_code == 400
+
+
+def test_advisor_defaults_to_creator(client, teacher):
+    club = client.post("/clubs", json={"name": "a", "type": "자율"}, headers=auth(teacher)).json()
+    assert club["advisor_id"] == teacher.id
+    teachers = client.get("/users/teachers", headers=auth(teacher)).json()
+    assert [t["id"] for t in teachers] == [teacher.id]
