@@ -1,11 +1,21 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi.responses import Response
+from pydantic import BaseModel
 from sqlalchemy import select
 
 from app.deps import DB, Teacher
 from app.models import Role, User
 from app.schemas.user import UserOut
+from app.services.user_import import build_template, import_users
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+class ImportOut(BaseModel):
+    created: int
+    updated: int
 
 
 @router.get("/students", response_model=list[UserOut])
@@ -16,3 +26,21 @@ def list_students(db: DB, _: Teacher, grade: int | None = None, class_no: int | 
     if class_no is not None:
         query = query.where(User.class_no == class_no)
     return list(db.scalars(query.order_by(User.grade, User.class_no, User.number)))
+
+
+@router.get("/import/template")
+def import_template(_: Teacher) -> Response:
+    return Response(
+        build_template(),
+        media_type=XLSX,
+        headers={"Content-Disposition": "attachment; filename*=UTF-8''user_import_template.xlsx"},
+    )
+
+
+@router.post("/import", response_model=ImportOut)
+async def import_users_from_excel(file: UploadFile, db: DB, _: Teacher) -> ImportOut:
+    """엑셀로 학생·교사 일괄 등록. 오류가 있으면 422와 행별 오류 목록을 돌려주고 아무것도 저장하지 않는다."""
+    result = import_users(db, await file.read())
+    if result.errors:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=result.errors)
+    return ImportOut(created=result.created, updated=result.updated)
