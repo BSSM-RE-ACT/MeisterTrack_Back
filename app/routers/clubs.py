@@ -25,6 +25,7 @@ class ClubOut(BaseModel):
     type: ClubType
     description: str
     room: str | None
+    advisor_id: int | None
     advisor_name: str | None
     member_count: int
 
@@ -62,6 +63,7 @@ def _out(club: Club) -> ClubOut:
         type=club.type,
         description=club.description,
         room=club.room,
+        advisor_id=club.advisor_id,
         advisor_name=club.advisor.name if club.advisor else None,
         member_count=len(club.members),
     )
@@ -106,8 +108,11 @@ def get_club(club_id: int, db: DB, _: CurrentUser) -> ClubDetail:
 
 
 @router.post("", response_model=ClubOut, status_code=status.HTTP_201_CREATED)
-def create_club(body: ClubIn, db: DB, _: Teacher) -> ClubOut:
+def create_club(body: ClubIn, db: DB, teacher: Teacher) -> ClubOut:
+    """지도교사를 지정하지 않으면 만든 교사가 지도교사가 된다."""
     club = Club(**body.model_dump())
+    if club.advisor_id is None:
+        club.advisor_id = teacher.id
     db.add(club)
     db.commit()
     return _out(club)

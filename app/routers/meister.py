@@ -12,6 +12,7 @@ from app.schemas.meister import (
     RejectIn,
     ReviewSummary,
     StudentScore,
+    StudentScoreRow,
     SubmissionCreate,
     SubmissionOut,
     SubmissionPage,
@@ -36,6 +37,18 @@ def create_submission(body: SubmissionCreate, db: DB, user: CurrentUser) -> Meis
 def my_submissions(db: DB, user: CurrentUser) -> list[MeisterSubmission]:
     query = select(MeisterSubmission).where(MeisterSubmission.student_id == user.id)
     return list(db.scalars(query.order_by(MeisterSubmission.created_at.desc())))
+
+
+@router.delete("/submissions/{submission_id}", status_code=status.HTTP_204_NO_CONTENT)
+def cancel_submission(submission_id: int, db: DB, user: CurrentUser) -> None:
+    """학생이 아직 처리되지 않은 본인 신청을 취소한다."""
+    submission = _get_submission(db, submission_id)
+    if submission.student_id != user.id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "본인 신청만 취소할 수 있습니다")
+    if submission.status != SubmissionStatus.pending:
+        raise HTTPException(status.HTTP_409_CONFLICT, "이미 처리된 신청은 취소할 수 없습니다")
+    db.delete(submission)
+    db.commit()
 
 
 @router.get("/submissions", response_model=SubmissionPage)
@@ -126,6 +139,47 @@ def reject(submission_id: int, body: RejectIn, db: DB, teacher: Teacher) -> Meis
     submission = _review(db, submission_id, teacher, SubmissionStatus.rejected, body.memo)
     db.commit()
     return submission
+
+
+@router.get("/scores", response_model=list[StudentScoreRow])
+def list_scores(db: DB, _: Teacher, grade: int | None = None, class_no: int | None = None) -> list[StudentScoreRow]:
+    """학생 점수 조회 목록: 학생별 카테고리 점수 합계와 대기 건수"""
+    query = select(User).where(User.role == Role.student)
+    if grade is not None:
+        query = query.where(User.grade == grade)
+    if class_no is not None:
+        query = query.where(User.class_no == class_no)
+    students = list(db.scalars(query.order_by(User.grade, User.class_no, User.number)))
+
+    rows = db.execute(
+        select(
+            MeisterSubmission.student_id,
+            MeisterSubmission.status,
+            MeisterSubmission.category,
+            func.count(),
+            func.coalesce(func.sum(MeisterSubmission.score), 0),
+        )
+        .where(MeisterSubmission.student_id.in_([s.id for s in students]))
+        .group_by(MeisterSubmission.student_id, MeisterSubmission.status, MeisterSubmission.category)
+    ).all()
+
+    scores: dict[int, dict[MeisterCategory, float]] = {s.id: dict.fromkeys(MeisterCategory, 0.0) for s in students}
+    pending: Counter[int] = Counter()
+    for student_id, status_, category, count, total in rows:
+        if status_ == SubmissionStatus.approved:
+            scores[student_id][category] += float(total)
+        elif status_ == SubmissionStatus.pending:
+            pending[student_id] += count
+
+    return [
+        StudentScoreRow(
+            student=UserOut.model_validate(s),
+            total=sum(scores[s.id].values()),
+            scores=scores[s.id],
+            pending=pending[s.id],
+        )
+        for s in students
+    ]
 
 
 @router.get("/scores/{student_id}", response_model=StudentScore)
