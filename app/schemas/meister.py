@@ -7,9 +7,11 @@ from app.schemas.user import UserOut
 
 
 class SubmissionCreate(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
     category: MeisterCategory
-    item: str = Field(max_length=100)
-    title: str = Field(max_length=200)
+    item: str = Field(min_length=1, max_length=100)
+    title: str = Field(min_length=1, max_length=200)
     content: str = ""
     attachment_url: str | None = None
     acquired_at: datetime | None = None

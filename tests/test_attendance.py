@@ -29,3 +29,9 @@ def test_student_cannot_see_others(client, student, teacher, db):
     db.commit()
     res = client.get(f"/attendance/students/{other.id}?month=2026-10", headers=auth(student))
     assert res.status_code == 403
+
+
+def test_rejects_non_student(client, student, teacher):
+    for target in (teacher.id, 99999):
+        body = [{"student_id": target, "date": "2026-10-27", "status": "출석"}]
+        assert client.put("/attendance", json=body, headers=auth(teacher)).status_code == 400
