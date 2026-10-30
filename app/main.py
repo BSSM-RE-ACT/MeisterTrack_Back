@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
-from app.routers import after_school, attendance, auth, calendar, clubs, meal, meister, mileage, timetable, users
+from app.routers import after_school, ai, attendance, auth, calendar, clubs, meal, meister, mileage, timetable, users
 
 settings = get_settings()
 if not settings.debug and settings.jwt_secret == "change-me":
@@ -28,6 +28,7 @@ app.include_router(calendar.router)
 app.include_router(mileage.router)
 app.include_router(clubs.router)
 app.include_router(after_school.router)
+app.include_router(ai.router)
 
 
 @app.get("/health")
