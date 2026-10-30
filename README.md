@@ -27,6 +27,13 @@ API 문서: http://localhost:8000/docs
 - `NEIS_API_KEY`: 없으면 호출당 5건으로 제한되니 운영에선 꼭 발급받아 넣기
 - `NEIS_OFFICE_CODE` (기본 C10 부산), `NEIS_SCHOOL_CODE` (기본 7150658)
 
+## AI 기능 (Claude API)
+
+역량 신청 분류와 심사 보조는 Claude API(`claude-opus-5-5`)를 씁니다.
+
+- `ANTHROPIC_API_KEY`: 없으면 `/ai/*`가 503을 돌려주고 화면에서 버튼이 비활성화됩니다
+- 유사 승인 사례와 점수 범위는 DB에서 계산하고, AI는 요약·확인할 점·점수 제안만 합니다
+
 ## 계정 일괄 등록
 
 `/users/import/template`로 받은 양식에 채워서 `/users/import`에 올립니다.
@@ -63,6 +70,9 @@ uv run ruff check . && uv run ruff format --check .
 | | POST | `/meister/submissions/{id}/reject` `{memo}` | 교사 |
 | | GET | `/meister/scores?grade&class_no` (학생별 점수 목록) | 교사 |
 | | GET | `/meister/scores/{student_id}` | 교사, 본인 |
+| AI | GET | `/ai/items` (영역별 세부 항목) | 로그인 |
+| | POST | `/ai/classify` `{title, content}` → 영역·항목 추천 | 학생 |
+| | GET | `/ai/review/{submission_id}` (요약, 유사 사례, 점수 제안) | 교사 |
 | 출결 | PUT | `/attendance` (여러 건 upsert) | 교사 |
 | | GET | `/attendance?date&grade&class_no` | 교사 |
 | | GET | `/attendance/students/{id}?month=2026-10` | 교사, 본인 |

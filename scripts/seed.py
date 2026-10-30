@@ -75,6 +75,23 @@ def main() -> None:
                     score=20,
                     reviewer_id=teacher.id,
                 ),
+                # AI 심사 보조가 비교할 같은 항목 승인 사례
+                *(
+                    MeisterSubmission(
+                        student_id=students[i].id,
+                        category=MeisterCategory.technical,
+                        item="전공관련 자격증",
+                        title=title,
+                        status=SubmissionStatus.approved,
+                        score=score,
+                        reviewer_id=teacher.id,
+                    )
+                    for i, title, score in [
+                        (4, "리눅스마스터 2급", 8),
+                        (5, "정보처리기능사", 10),
+                        (6, "네트워크관리사 2급", 8),
+                    ]
+                ),
             ]
         )
 

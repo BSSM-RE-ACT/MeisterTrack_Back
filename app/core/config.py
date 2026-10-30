@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     neis_office_code: str = "C10"  # 부산광역시교육청
     neis_school_code: str = "7150658"  # 부산소프트웨어마이스터고
 
+    # Claude API 키. 비우면 /ai/* 기능이 꺼진다(503).
+    anthropic_api_key: str = ""
+    anthropic_model: str = "claude-opus-5-5"
+
     cors_origins: list[str] = ["http://localhost:5173", "tauri://localhost", "http://tauri.localhost"]
 
     # 개발용 로그인(/auth/dev-login) 허용 여부. 운영에서는 반드시 false.
